@@ -7,9 +7,17 @@ import {
   ChevronUpIcon,
 } from "@radix-ui/react-icons";
 
-const SelectDropDown = ({ onChange, value }) => (
-  <Select.Root onValueChange={onChange} value={value}>
-    <Select.Trigger className="SelectTrigger" aria-label={`ticket-label`}>
+const SelectDropDown = ({ onChange, value, isError }) => (
+  <Select.Root
+    onValueChange={onChange}
+    value={value}
+    name="ticket-no"
+    id="ticket-no-hint"
+  >
+    <Select.Trigger
+      className={`SelectTrigger ${isError ? "selectTrigger-error" : ""}`}
+      aria-label={`ticket-label ticket-no-error`}
+    >
       <Select.Value placeholder="Select Number of tickets" />
       <Select.Icon className="SelectIcon">
         <ChevronDownIcon />

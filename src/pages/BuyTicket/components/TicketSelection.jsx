@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useMemo } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import SelectDropDown from "./../../../components/shared/ui/SelectDropdown";
 import Button from "./../../../components/shared/ui/Button";
 import Separator from "../../../components/shared/ui/Separator";
@@ -65,7 +71,14 @@ const TicketSelection = () => {
     return { isSoldOut, ticketName: ticket.subtitle };
   }, [ticketDetails, ticketData]);
 
+  const [ticketSelectionError, setTicketSelectionError] = useState(false);
+
   const handleNext = () => {
+    setTicketSelectionError(false);
+    if (!ticketDetails.ticketNumber) {
+      setTicketSelectionError(true);
+      return;
+    }
     const { isSoldOut, ticketName } = checkForTicketSoldOut();
     if (isSoldOut) {
       toast.error(`${ticketName} ticket is Sold Out.`);
@@ -113,14 +126,20 @@ const TicketSelection = () => {
       </div>
 
       <div className="ticket-select-wrapper">
-        <h3 id="ticket-label">Number of Tickets:</h3>
+        <h3 id="ticket-label ticket-no-hint">Number of Tickets:</h3>
         <SelectDropDown
           aria-labelledby="ticket-label"
           value={ticketDetails.ticketNumber}
+          isError={ticketSelectionError}
           onChange={(value) =>
             setTicketDetails({ ...ticketDetails, ticketNumber: value })
           }
         />
+        {ticketSelectionError ? (
+          <p className="error ticket-no-error">Please select Ticket quantity</p>
+        ) : (
+          ""
+        )}
       </div>
 
       <div className="button-wrapper">
@@ -145,11 +164,7 @@ const TicketSelection = () => {
           Cancel
         </Button>
 
-        <Button
-          onClick={handleNext}
-          disabled={!ticketDetails.ticketNumber}
-          role="button"
-        >
+        <Button onClick={handleNext} role="button">
           Next
         </Button>
       </div>
