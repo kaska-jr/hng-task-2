@@ -1,8 +1,9 @@
 import { createContext, useState } from "react";
 import usePersistedState from "../hooks/usePersistedState";
-import { name } from "@cloudinary/url-gen/actions/namedTransformation";
+import { nanoid } from "nanoid";
 
 const defaultValue = {
+  ticketId: nanoid(),
   ticketType: 0,
   ticketNumber: "",
   profileImage: "",

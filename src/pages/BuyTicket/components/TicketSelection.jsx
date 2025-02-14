@@ -1,11 +1,12 @@
-import React, { useContext } from "react";
+import React, { useCallback, useContext, useMemo } from "react";
 import SelectDropDown from "./../../../components/shared/ui/SelectDropdown";
 import Button from "./../../../components/shared/ui/Button";
 import Separator from "../../../components/shared/ui/Separator";
 import StageContext from "../../../context/StageContext";
 import TicketDetailsContext from "../../../context/DetailsContext";
 import { toast } from "react-toastify";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+import { nanoid } from "nanoid";
 
 const TicketSelection = () => {
   const navigate = useNavigate();
@@ -13,86 +14,59 @@ const TicketSelection = () => {
   const { ticketDetails, setTicketDetails, ticketHolderList } =
     useContext(TicketDetailsContext);
 
-  const getPeoplecount = () => {
-    const validTicketHolderList = Array.isArray(ticketHolderList)
-      ? ticketHolderList
-      : [];
+  const ticketCounts = useMemo(() => {
+    if (!Array.isArray(ticketHolderList)) return { free: 0, vip: 0, vvip: 0 };
 
-    const freeTicketCount = validTicketHolderList
-      .filter((item) => item.ticketType === 0)
-      .reduce((acc, item) => acc + parseInt(item.ticketNumber), 0);
+    return ticketHolderList.reduce(
+      (acc, item) => {
+        if (item.ticketType === 0) acc.free += parseInt(item.ticketNumber);
+        else if (item.ticketType === 1) acc.vip += parseInt(item.ticketNumber);
+        else if (item.ticketType === 2) acc.vvip += parseInt(item.ticketNumber);
+        return acc;
+      },
+      { free: 0, vip: 0, vvip: 0 }
+    );
+  }, [ticketHolderList]);
 
-    const vipTicketCount = validTicketHolderList
-      .filter((item) => item.ticketType === 1)
-      .reduce((acc, item) => acc + parseInt(item.ticketNumber), 0);
+  const ticketData = useMemo(
+    () => [
+      {
+        id: 0,
+        price: 0,
+        subtitle: "Free Access",
+        quantity: ticketCounts.free,
+        total: 30,
+      },
+      {
+        id: 1,
+        price: 150,
+        subtitle: "VIP Access",
+        quantity: ticketCounts.vip,
+        total: 20,
+      },
+      {
+        id: 2,
+        price: 300,
+        subtitle: "VVIP Access",
+        quantity: ticketCounts.vvip,
+        total: 10,
+      },
+    ],
+    [ticketCounts]
+  );
 
-    const vvipTicketCount = validTicketHolderList
-      .filter((item) => item.ticketType === 2)
-      .reduce((acc, item) => acc + parseInt(item.ticketNumber), 0);
-
-    return {
-      freeTicketCount: freeTicketCount,
-      vipTicketCount: vipTicketCount,
-      vvipTicketCount: vvipTicketCount,
-    };
-  };
-
-  const ticketData = [
-    {
-      id: 0,
-      price: 0,
-      subtitle: "Free Access",
-      quantity: getPeoplecount().freeTicketCount || 0,
-      total: 30,
-    },
-    {
-      id: 1,
-      price: 150,
-      subtitle: "VIP Access",
-      quantity: getPeoplecount().vipTicketCount || 0,
-      total: 20,
-    },
-    {
-      id: 2,
-      price: 300,
-      subtitle: "VVIP Access",
-      quantity: getPeoplecount().vvipTicketCount || 0,
-      total: 10,
-    },
-  ];
-
-  const getTicketInfo = () => {
-    const freeTickets = ticketData[0];
-    const vipTickets = ticketData[1];
-    const vvipTickets = ticketData[2];
-    return {
-      freeTickets: freeTickets,
-      vipTickets: vipTickets,
-      vvipTickets: vvipTickets,
-    };
-  };
-
-  const checkForTicketSoldOut = () => {
-    //New Ticket details
+  const checkForTicketSoldOut = useCallback(() => {
     const { ticketNumber, ticketType } = ticketDetails;
+    const ticket = ticketData.find((t) => t.id === ticketType);
 
-    // Old Ticket details
-    let ticket = null;
-    if (ticketType === 0) {
-      ticket = getTicketInfo().freeTickets;
-    } else if (ticketType === 1) {
-      ticket = getTicketInfo().vipTickets;
-    } else if (ticketType === 2) {
-      ticket = getTicketInfo().vvipTickets;
-    }
-    const isSoldOut =
-      parseInt(ticketNumber) + ticket.quantity > parseInt(ticket.total);
-    return { isSoldOut: isSoldOut, ticketName: ticket.subtitle };
-  };
+    if (!ticket) return { isSoldOut: false, ticketName: "" };
+
+    const isSoldOut = parseInt(ticketNumber) + ticket.quantity > ticket.total;
+    return { isSoldOut, ticketName: ticket.subtitle };
+  }, [ticketDetails, ticketData]);
 
   const handleNext = () => {
     const { isSoldOut, ticketName } = checkForTicketSoldOut();
-    console.log({ isSoldOut, ticketName });
     if (isSoldOut) {
       toast.error(`${ticketName} ticket is Sold Out.`);
     } else {
@@ -119,6 +93,7 @@ const TicketSelection = () => {
               className={`ticket-type ${
                 item.id === ticketDetails.ticketType ? "active-type" : ""
               }`}
+              aria-pressed={item.id === ticketDetails.ticketType}
               key={item.id}
               onClick={() => {
                 setTicketDetails({
@@ -129,7 +104,7 @@ const TicketSelection = () => {
             >
               {item.price == 0 ? <h4>Free</h4> : <h4>${item.price}</h4>}
               <h5>{item.subtitle}</h5>
-              <span>
+              <span aria-live="polite">
                 {item.quantity}/{item.total}
               </span>
             </div>
@@ -138,8 +113,9 @@ const TicketSelection = () => {
       </div>
 
       <div className="ticket-select-wrapper">
-        <h3>Number of Tickets:</h3>
+        <h3 id="ticket-label">Number of Tickets:</h3>
         <SelectDropDown
+          aria-labelledby="ticket-label"
           value={ticketDetails.ticketNumber}
           onChange={(value) =>
             setTicketDetails({ ...ticketDetails, ticketNumber: value })
@@ -160,14 +136,20 @@ const TicketSelection = () => {
               email: "",
               name: "",
               specialRequest: "",
+              ticketId: nanoid(),
             });
             navigate("/", { replace: true });
           }}
+          role="button"
         >
           Cancel
         </Button>
 
-        <Button onClick={handleNext} disabled={!ticketDetails.ticketNumber}>
+        <Button
+          onClick={handleNext}
+          disabled={!ticketDetails.ticketNumber}
+          role="button"
+        >
           Next
         </Button>
       </div>

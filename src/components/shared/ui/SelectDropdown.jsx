@@ -9,7 +9,7 @@ import {
 
 const SelectDropDown = ({ onChange, value }) => (
   <Select.Root onValueChange={onChange} value={value}>
-    <Select.Trigger className="SelectTrigger" aria-label="Food">
+    <Select.Trigger className="SelectTrigger" aria-label={`ticket-label`}>
       <Select.Value placeholder="Select Number of tickets" />
       <Select.Icon className="SelectIcon">
         <ChevronDownIcon />

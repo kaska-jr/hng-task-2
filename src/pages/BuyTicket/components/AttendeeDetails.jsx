@@ -8,6 +8,7 @@ import { uploadFile } from "../../../lib/uploadFile";
 import TicketDetailsContext from "../../../context/DetailsContext";
 import { useFormik } from "formik";
 import { basicSchema } from "../../../schema";
+import { nanoid } from "nanoid";
 
 const AttendeeDetails = () => {
   const { gotoNext, goToPrevious } = useContext(StageContext);
@@ -46,6 +47,7 @@ const AttendeeDetails = () => {
       profileImage: ticketDetails.profileImage,
       ticketNumber: ticketDetails.ticketNumber,
       ticketType: ticketDetails.ticketType,
+      ticketId: ticketDetails.ticketId,
     };
     await new Promise((resolve) => setTimeout(resolve, 2000));
     if (!Array.isArray(ticketHolderList) || ticketHolderList.length === 0) {
@@ -124,13 +126,16 @@ const AttendeeDetails = () => {
         autoComplete="off"
       >
         <div className="attendee-detail attendee-name">
-          <label htmlFor="name">Enter your Full Name</label>
+          <label htmlFor="name" id="full-name-hint">
+            Enter your Full Name <span style={{ color: "red" }}>*</span>
+          </label>
           <Input
             type="text"
             name="name"
             value={values.name}
             onChange={handleChange}
             onBlur={handleBlur}
+            aria-describedby="full-name-hint full-name-error"
             className={
               errors.name && touched.name
                 ? "input-error input-fix"
@@ -138,12 +143,14 @@ const AttendeeDetails = () => {
             }
           />
           {errors.name && touched.name && (
-            <p className="error">{errors.name}</p>
+            <p className="error" id="full-name-error" aria-live="polite">
+              {errors.name}
+            </p>
           )}
         </div>
         <div className="attendee-detail attendee-email">
-          <label htmlFor="email">
-            Enter your Email <span>*</span>
+          <label htmlFor="email" id="email-hint">
+            Enter your Email <span style={{ color: "red" }}>*</span>
           </label>
           <div className="input-with-icon">
             <Input
@@ -152,22 +159,28 @@ const AttendeeDetails = () => {
               value={values.email}
               onChange={handleChange}
               onBlur={handleBlur}
+              aria-describedby="email-hint email-error"
               className={errors.email && touched.email ? "input-error" : ""}
             />
             <MdOutlineMail className="input-icon" />
           </div>
           {errors.email && touched.email && (
-            <p className="error">{errors.email}</p>
+            <p className="error" id="email-error" aria-live="polite">
+              {errors.email}
+            </p>
           )}
         </div>
 
         <div className="attendee-detail attendee-phone">
-          <label htmlFor="specialRequest">Special Request?</label>
+          <label htmlFor="specialRequest" id="special-request-hint">
+            Special Request?
+          </label>
           <textarea
             name="specialRequest"
             value={values.specialRequest}
             onChange={handleChange}
             onBlur={handleBlur}
+            aria-describedby="special-request-hint special-request-error"
             className={
               errors.specialRequest && touched.specialRequest
                 ? "input-error"
@@ -177,7 +190,9 @@ const AttendeeDetails = () => {
             rows={"50"}
           ></textarea>
           {errors.specialRequest && touched.specialRequest && (
-            <p className="error">{errors.specialRequest}</p>
+            <p className="error" id="special-request-error" aria-live="polite">
+              {errors.specialRequest}
+            </p>
           )}
         </div>
         <div className="button-wrapper">
@@ -187,10 +202,11 @@ const AttendeeDetails = () => {
               e.stopPropagation();
               goToPrevious();
             }}
+            role="button"
           >
             Back
           </Button>
-          <Button type="submit">
+          <Button type="submit" role="button">
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
         </div>

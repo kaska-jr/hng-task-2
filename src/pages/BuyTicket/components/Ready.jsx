@@ -6,6 +6,8 @@ import TicketDetailsContext from "../../../context/DetailsContext";
 import { getTicketType } from "../../../lib/helper";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import TicketBarcode from "./TicketBarCode";
+import { nanoid } from "nanoid";
 
 const Ready = () => {
   const { setStage } = useContext(StageContext);
@@ -48,18 +50,19 @@ const Ready = () => {
         </p>
       </div>
 
-      <div className="ticket-ready-body" ref={ticket}>
+      <div className="ticket-ready-body" ref={ticket} aria-live="polite">
         <div className="ticket-ready-header">
           <div className="ticket-ready-about">
             <h1>Techember Fest ”25</h1>
             <p>📍 04 Rumens road, Ikoyi, Lagos </p>
             <p>📅 March 15, 2025 | 7:00 PM</p>
-            <div className="ticket-ready-profile">
+            <figure className="ticket-ready-profile">
               <img
                 src={ticketDetails.profileImage || "/Userimg.png"}
                 alt={ticketDetails.name || ticketDetails.email}
               />
-            </div>
+            </figure>
+
             <div className="ticket-ready-description">
               <div className="ticket-ready-details">
                 <div className="ticket-ready-detail">
@@ -91,13 +94,14 @@ const Ready = () => {
           </div>
         </div>
         <Separator />
-        <div className="ticket-ready-bar">
-          <img src="/Bar-Code.svg" alt="Bar Code" />
-        </div>
+        <figure className="ticket-ready-bar">
+          <TicketBarcode ticketId={ticketDetails.ticketId} />
+        </figure>
       </div>
 
       <div className="button-wrapper">
         <Button
+          aria-label="Book another ticket"
           outline={true}
           onClick={() => {
             setTicketDetails({
@@ -109,6 +113,7 @@ const Ready = () => {
               email: "",
               name: "",
               specialRequest: "",
+              ticketId: nanoid(),
             });
             setStage(0);
           }}
@@ -116,6 +121,7 @@ const Ready = () => {
           Book Another Ticket
         </Button>
         <Button
+          aria-label="Download your ticket"
           onClick={(e) => {
             e.stopPropagation();
             handleDownloadTicket();
